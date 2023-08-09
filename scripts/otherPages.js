@@ -2,56 +2,25 @@
 
 let cart = JSON.parse(localStorage.getItem('cart')) || [];
 const cartDOM = document.querySelector('.cart');
-// const addToCartButtonsDOM = document.querySelectorAll('[data-action="ADD_TO_CART"]');
 
 if (cart.length > 0) {
   cart.forEach(cartItem => {
-    const product = cartItem;
-    insertItemToDOM(product);
+    insertItemToDOM(cartItem);
     countCartTotal();
-
-    // addToCartButtonsDOM.forEach(addToCartButtonDOM => {
-    //   const productDOM = addToCartButtonDOM.parentNode;
-
-    //   if (productDOM.querySelector('.product__name').innerText === product.name) {
-    //     handleActionButtons(addToCartButtonDOM, product);
-    //   }
-    // });
-    handleActionButtons(product);
+    handleActionButtons(cartItem);
   });
 }
 
-// addToCartButtonsDOM.forEach(addToCartButtonDOM => {
-//   addToCartButtonDOM.addEventListener('click', () => {
-//     const productDOM = addToCartButtonDOM.parentNode;
-//     const product = {
-//       image: productDOM.querySelector('.product__image').getAttribute('src'),
-//       name: productDOM.querySelector('.product__name').innerText,
-//       price: productDOM.querySelector('.product__price').innerText,
-//       quantity: 1
-//     };
-
-//     const isInCart = cart.filter(cartItem => cartItem.name === product.name).length > 0;
-
-//     if (!isInCart) {
-//       insertItemToDOM(product);
-//       cart.push(product);
-//       saveCart();
-//       handleActionButtons(addToCartButtonDOM, product);
-//     }
-//   });
-// });
-
-function insertItemToDOM(product) {
+function insertItemToDOM(cartItem) {
   cartDOM.insertAdjacentHTML(
     'beforeend',
     `
     <div class="cart__item">
-      <img class="cart__item__image" src="${product.image}" alt="${product.name}">
-      <h3 class="cart__item__name">${product.name}</h3>
-      <h3 class="cart__item__price">${product.price}</h3>
-      <button class="btn btn--primary btn--small${product.quantity === 1 ? ' btn--danger' : ''}" data-action="DECREASE_ITEM">&minus;</button>
-      <h3 class="cart__item__quantity">${product.quantity}</h3>
+      <img class="cart__item__image" src="${cartItem.image}" alt="${cartItem.name}">
+      <h3 class="cart__item__name">${cartItem.name}</h3>
+      <h3 class="cart__item__price">${cartItem.price}</h3>
+      <button class="btn btn--primary btn--small${cartItem.quantity === 1 ? ' btn--danger' : ''}" data-action="DECREASE_ITEM">&minus;</button>
+      <h3 class="cart__item__quantity">${cartItem.quantity}</h3>
       <button class="btn btn--primary btn--small" data-action="INCREASE_ITEM">&plus;</button>
       <button class="btn btn--danger btn--small" data-action="REMOVE_ITEM">&times;</button>
     </div>
@@ -61,68 +30,50 @@ function insertItemToDOM(product) {
   addCartFooter();
 }
 
-// function handleActionButtons(addToCartButtonDOM, product) {
-function handleActionButtons(product) {
-  // addToCartButtonDOM.innerText = 'In Cart';
-  // addToCartButtonDOM.disabled = true;
-
+function handleActionButtons(cartItem) {
   const cartItemsDOM = cartDOM.querySelectorAll('.cart__item');
-  cartItemsDOM.forEach(cartItemDOM => {
-    if (cartItemDOM.querySelector('.cart__item__name').innerText === product.name) {
-      cartItemDOM.querySelector('[data-action="INCREASE_ITEM"]').addEventListener('click', () => increaseItem(product, cartItemDOM));
-      // cartItemDOM.querySelector('[data-action="DECREASE_ITEM"]').addEventListener('click', () => decreaseItem(product, cartItemDOM, addToCartButtonDOM));
-      // cartItemDOM.querySelector('[data-action="REMOVE_ITEM"]').addEventListener('click', () => removeItem(product, cartItemDOM, addToCartButtonDOM));
-      cartItemDOM.querySelector('[data-action="DECREASE_ITEM"]').addEventListener('click', () => decreaseItem(product, cartItemDOM));
-      cartItemDOM.querySelector('[data-action="REMOVE_ITEM"]').addEventListener('click', () => removeItem(product, cartItemDOM));
-    }
-  });
+  const cartItemDOM = Array.from(cartItemsDOM).find(
+    cartItemDOM => cartItemDOM.querySelector('.cart__item__name').innerText === cartItem.name
+  );
+
+  if (cartItemDOM) {
+    cartItemDOM.querySelector('[data-action="INCREASE_ITEM"]').addEventListener('click', () => increaseItem(cartItem, cartItemDOM));
+    cartItemDOM.querySelector('[data-action="DECREASE_ITEM"]').addEventListener('click', () => decreaseItem(cartItem, cartItemDOM));
+    cartItemDOM.querySelector('[data-action="REMOVE_ITEM"]').addEventListener('click', () => removeItem(cartItem, cartItemDOM));
+  }
 }
 
-function increaseItem(product, cartItemDOM) {
-  cart.forEach(cartItem => {
-    if (cartItem.name === product.name) {
-      cartItemDOM.querySelector('.cart__item__quantity').innerText = ++cartItem.quantity;
-      cartItemDOM.querySelector('[data-action="DECREASE_ITEM"]').classList.remove('btn--danger');
-      saveCart();
-    }
-  });
+function increaseItem(cartItem, cartItemDOM) {
+  cartItemDOM.querySelector('.cart__item__quantity').innerText = ++cartItem.quantity;
+  cartItemDOM.querySelector('[data-action="DECREASE_ITEM"]').classList.remove('btn--danger');
+  saveCart();
 }
 
-// function decreaseItem(product, cartItemDOM, addToCartButtonDOM) {
-function decreaseItem(product, cartItemDOM) {
-  cart.forEach(cartItem => {
-    if (cartItem.name === product.name) {
-      if (cartItem.quantity > 1) {
-        cartItemDOM.querySelector('.cart__item__quantity').innerText = --cartItem.quantity;
-        saveCart();
-      } else {
-        // removeItem(product, cartItemDOM, addToCartButtonDOM);
-        removeItem(product, cartItemDOM);
-      }
+function decreaseItem(cartItem, cartItemDOM) {
+  if (cartItem.quantity > 1) {
+    cartItemDOM.querySelector('.cart__item__quantity').innerText = --cartItem.quantity;
+    saveCart();
+  } else {
+    removeItem(cartItem, cartItemDOM);
+  }
 
-      if (cartItem.quantity === 1) {
-        cartItemDOM.querySelector('[data-action="DECREASE_ITEM"]').classList.add('btn--danger');
-      }
-    }
-  });
+  if (cartItem.quantity === 1) {
+    cartItemDOM.querySelector('[data-action="DECREASE_ITEM"]').classList.add('btn--danger');
+  }
 }
 
-// function removeItem(product, cartItemDOM, addToCartButtonDOM) {
-function removeItem(product, cartItemDOM) {
+function removeItem(cartItem, cartItemDOM) {
   cartItemDOM.classList.add('cart__item--removed');
   setTimeout(() => cartItemDOM.remove(), 250);
-  cart = cart.filter(cartItem => cartItem.name !== product.name);
+  cart = cart.filter(item => item.name !== cartItem.name);
   saveCart();
-  // addToCartButtonDOM.innerText = 'Add To Cart';
-  // addToCartButtonDOM.disabled = false;
-
   if (cart.length < 1) {
     document.querySelector('.cart-footer').remove();
   }
 }
 
 function addCartFooter() {
-  if (document.querySelector('.cart-footer') === null) {
+  if (!document.querySelector('.cart-footer')) {
     cartDOM.insertAdjacentHTML(
       'afterend',
       `
@@ -133,8 +84,8 @@ function addCartFooter() {
     `
     );
 
-    document.querySelector('[data-action="CLEAR_CART"]').addEventListener('click', () => clearCart());
-    document.querySelector('[data-action="CHECKOUT"]').addEventListener('click', () => checkout());
+    document.querySelector('[data-action="CLEAR_CART"]').addEventListener('click', clearCart);
+    document.querySelector('[data-action="CHECKOUT"]').addEventListener('click', checkout);
   }
 }
 
@@ -147,11 +98,6 @@ function clearCart() {
   cart = [];
   localStorage.removeItem('cart');
   document.querySelector('.cart-footer').remove();
-
-  // addToCartButtonsDOM.forEach(addToCartButtonDOM => {
-  //   addToCartButtonDOM.innerText = 'Add To Cart';
-  //   addToCartButtonDOM.disabled = false;
-  // });
 }
 
 function checkout() {
